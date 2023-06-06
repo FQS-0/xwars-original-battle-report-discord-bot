@@ -2,8 +2,10 @@ const path = require('path')
 const Canvas = require('canvas')
 
 const createBattleReportImage = (data) => {
-        const MAX_X = 400
+    const MAX_X = 400
     const MAX_Y = 200
+
+    Canvas.registerFont('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', { family: 'Dejavu Sans' })
 
     const canvas = Canvas.createCanvas(MAX_X, MAX_Y)
     const ctx = canvas.getContext('2d')
@@ -66,15 +68,15 @@ const createBattleReportImage = (data) => {
     }
 
     function font_big() {
-        ctx.font = `${(MAX_Y/10-4)}px sans-serif`
+        ctx.font = `${(MAX_Y/10-4)}px "Dejavu Sans"`
     }
 
     function font_medium() {
-        ctx.font = `${Math.floor((MAX_Y/10-8))}px sans-serif`
+        ctx.font = `${Math.floor((MAX_Y/10-8))}px "Dejavu Sans"`
     }
 
     function font_small() {
-        ctx.font = `${Math.floor((MAX_Y/10-4)/2)}px sans-serif`
+        ctx.font = `${Math.floor((MAX_Y/10-4)/2)}px "Dejavu Sans"`
     }
 
     function sum(data, key1, key2, key3) {
@@ -92,7 +94,7 @@ const createBattleReportImage = (data) => {
 
     const logo = new Canvas.Image()
     logo.onload = () => {
-        ctx.drawImage(logo, (MAX_X-logo.width)/2, row(2)-logo.height-5, logo.width, logo.height)
+        ctx.drawImage(logo, (MAX_X-logo.width)/2, row(2)-logo.height+5, logo.width, logo.height)
     }
     logo.src = path.join(__dirname, 'img', 'logo.png')
 
