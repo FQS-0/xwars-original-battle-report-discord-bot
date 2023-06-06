@@ -10,10 +10,10 @@ if(!DISCORD_BOT_TOKEN) throw new Error('missing required environment variable DI
 
 const fs = require('node:fs')
 const express = require('express')
-const { Client, Events, GatewayIntentBits, EmbedBuilder } = require('discord.js')
+const { Client, Events, GatewayIntentBits, EmbedBuilder, AttachmentBuilder } = require('discord.js')
 const axios = require('axios')
 const uuid = require('uuid').v4
-
+const createBattleReportImage = require('./util.js')
 const app = express()
 
 function escapeRegExp(text) {
@@ -199,6 +199,9 @@ ${defenderResponsePart}
         embedUser = {name: user.username, iconURL: user.avatarURL()}
     }
 
+    const image = createBattleReportImage(parsedJsonData)
+    const file = new AttachmentBuilder(image, {name: 'kb.png'})
+
     const embed = new EmbedBuilder()
     .setTitle('Battle report')
     .setURL(finalReportUrl)
@@ -209,9 +212,11 @@ ${defenderResponsePart}
 ${fleetLostResponse}
 ${resultResponse}
 `)
+    .setImage('attachment://kb.png')
+
     return {
         finalReportUrl: finalReportUrl,
-        embed: embed,
+        msg: {embeds: [embed], files: [file]},
     }
 }
 
@@ -229,13 +234,13 @@ client.on(Events.InteractionCreate, async interaction => {
                     pmOnly = true
             }
 
-            const {embed, finalReportUrl} = await generateReportText(reportUrl, interaction.user, interaction)
+            const {msg, finalReportUrl} = await generateReportText(reportUrl, interaction.user, interaction)
             // don't send messages to public channel in DEBUG mode
             console.log('shared report url', reportUrl, 'as', finalReportUrl, 'pm-only?', pmOnly)
             if(DEBUG || pmOnly) {
                 return interaction.reply({content: text, ephemeral: true })
             }
-            await client.channels.cache.find(channel => channel.name.match(/battle-reports/)).send({embeds: [embed]})
+            await client.channels.cache.find(channel => channel.name.match(/battle-reports/)).send(msg)
             await interaction.reply({
                 content: `Battle report shared as ${finalReportUrl} in channel ${client.channels.cache.find(channel => channel.name.match(/battle-reports/)).toString()}`,
                 ephemeral: true
@@ -257,9 +262,9 @@ app.get('/report', async (req, res) => {
     const reportUrl = req.query.url
     console.log('received report url via HTTP request', reportUrl)
     try {
-        const {embed, finalReportUrl} = await generateReportText(reportUrl, '__**X-Wars Original News Agency:**__')
+        const {msg, finalReportUrl} = await generateReportText(reportUrl, '__**X-Wars Original News Agency:**__')
         console.log('x-wars server shared report url', reportUrl, 'as', finalReportUrl)
-        await client.channels.cache.find(channel => channel.name.match(/battle-reports/)).send({embeds: [embed]})
+        await client.channels.cache.find(channel => channel.name.match(/battle-reports/)).send(msg)
     } catch(e) {
         console.log('got error while trying to share report via HTTP request', e, reportUrl)
         res.status(500)
