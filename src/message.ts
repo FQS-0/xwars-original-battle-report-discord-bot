@@ -218,6 +218,7 @@ const createOneLineMessage = (
     const embed = new EmbedBuilder().setDescription(
         `[Battle Report](${finalReportUrl}): ${attacker} vs ${defender}${loot}`
     )
+    embed.setTimestamp(data.time * 1000)
 
     return { embeds: [embed] }
 }
