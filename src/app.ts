@@ -143,8 +143,15 @@ import { GuildConfigStorage } from "./guild-config-storage"
                 finalReportUrl,
                 "__**X-Wars Original News Agency:**__"
             )
+            const msgBarGraph = message.createMessage(
+                "bargraph",
+                data,
+                fleetData,
+                finalReportUrl,
+                "__**X-Wars Original News Agency:**__"
+            )
             client.guilds.cache.each(async (guild) => {
-                let text, embed
+                let text, embed, file
                 switch (
                     (await config.getValue(guild.id, "default_format_bot")) ||
                     "text"
@@ -152,11 +159,18 @@ import { GuildConfigStorage } from "./guild-config-storage"
                     case "oneline":
                         text = msgOneLine.text
                         embed = msgOneLine.embed
+                        file = msgOneLine.file
+                        break
+                    case "bargraph":
+                        text = msgBarGraph.text
+                        embed = msgBarGraph.embed
+                        file = msgBarGraph.file
                         break
                     case "text":
                     default:
                         text = msgText.text
                         embed = msgText.embed
+                        file = msgText.file
                         break
                 }
                 const cache = guild.channels.cache
@@ -167,12 +181,13 @@ import { GuildConfigStorage } from "./guild-config-storage"
                     channel.name.match(/battle-reports/)
                 )
                 if (channel == undefined) {
-                    throw new Error("batte reports channel not found")
+                    throw new Error("battle reports channel not found")
                 }
                 if (channel instanceof TextChannel) {
                     await channel.send({
                         content: text,
                         embeds: embed ? [embed] : undefined,
+                        files: file ? [file] : undefined,
                     })
                 }
             })

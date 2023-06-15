@@ -53,9 +53,10 @@ builder
             .setName("format")
             .addChoices(
                 { name: "text", value: "text" },
-                { name: "oneline", value: "oneline" }
+                { name: "oneline", value: "oneline" },
+                { name: "bargraph", value: "bargraph" }
             )
-            .setDescription("message format options: text, oneline")
+            .setDescription("message format options: text, oneline, bargraph")
             .setRequired(false)
     )
 
@@ -89,12 +90,12 @@ const command = async (
         )
         const finalReportUrl = [REPORT_URL_BASE, reportId].join("")
 
-        const { text, embed } = message.createMessage(
+        const { text, embed, file } = message.createMessage(
             format,
             data,
             fleetData,
             finalReportUrl,
-            interaction.user.toString()
+            interaction.user
         )
 
         console.log(
@@ -109,6 +110,7 @@ const command = async (
             interaction.reply({
                 content: text,
                 embeds: embed ? [embed] : undefined,
+                files: file ? [file] : undefined,
                 ephemeral: true,
             })
             return
@@ -128,6 +130,7 @@ const command = async (
             await channel.send({
                 content: text,
                 embeds: embed ? [embed] : undefined,
+                files: file ? [file] : undefined,
             })
         }
         await interaction.reply({

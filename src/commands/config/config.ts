@@ -42,10 +42,11 @@ builder
             .addStringOption((option) =>
                 option
                     .setName("format")
-                    .setDescription("message format: text or oneline")
+                    .setDescription("message format: text, oneline or bargraph")
                     .addChoices(
                         { name: "text", value: "text" },
-                        { name: "oneline", value: "oneline" }
+                        { name: "oneline", value: "oneline" },
+                        { name: "bargraph", value: "bargraph" }
                     )
             )
     )
