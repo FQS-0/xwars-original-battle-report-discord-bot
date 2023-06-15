@@ -9,8 +9,8 @@
 import {
     AttachmentBuilder,
     EmbedBuilder,
+    GuildMember,
     MessageCreateOptions,
-    User,
 } from "discord.js"
 import { Data } from "./model/report/Data"
 import { MpType, PartyEnum } from "./model/report/Enums"
@@ -51,7 +51,7 @@ const createTextMessage = (
     data: Data,
     fleetData: Fleet[],
     finalReportUrl: string,
-    user: string | User
+    user: string | GuildMember
 ): MessageCreateOptions => {
     const attackerMP = data
         .getMp(MpType.fighting, PartyEnum.attacker)
@@ -233,7 +233,7 @@ const createOneLineMessage = (
 const createBarGraphMessage = (
     data: Data,
     finalReportUrl: string,
-    user: string | User
+    user: string | GuildMember
 ): MessageCreateOptions => {
     const embed = new EmbedBuilder()
         .setTitle("Battle report")
@@ -244,8 +244,8 @@ const createBarGraphMessage = (
         embed.setAuthor({ name: user })
     } else {
         embed.setAuthor({
-            name: user.username,
-            iconURL: user.avatarURL() || undefined,
+            name: user.displayName,
+            iconURL: user.displayAvatarURL(),
         })
     }
 
@@ -401,7 +401,7 @@ export const createMessage = (
     data: Data,
     fleetData: Fleet[],
     finalReportUrl: string,
-    user: string | User
+    user: string | GuildMember
 ): MessageCreateOptions => {
     switch (format) {
         case "text":

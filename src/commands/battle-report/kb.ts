@@ -90,12 +90,16 @@ const command = async (
         )
         const finalReportUrl = [REPORT_URL_BASE, reportId].join("")
 
+        const guildUser = guild.members.cache.find(
+            (user) => user.id == interaction.user.id
+        )
+        if (guildUser == undefined) throw new Error("User not found")
         const msgOptions = message.createMessage(
             format,
             data,
             fleetData,
             finalReportUrl,
-            interaction.user
+            guildUser
         )
 
         console.log(

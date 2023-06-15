@@ -29,7 +29,6 @@ import { CommandManager } from "./command"
 import * as parser from "./parser"
 import * as message from "./message"
 import { GuildConfigStorage } from "./guild-config-storage"
-
 ;(async function () {
     const app = express()
 
