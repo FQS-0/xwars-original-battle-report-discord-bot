@@ -21,12 +21,15 @@ import {
     GatewayIntentBits,
     CloseEvent,
     TextChannel,
+    MessageCreateOptions,
+    Collection,
 } from "discord.js"
 
 import { CommandManager } from "./command"
 import * as parser from "./parser"
 import * as message from "./message"
 import { GuildConfigStorage } from "./guild-config-storage"
+
 ;(async function () {
     const app = express()
 
@@ -128,51 +131,45 @@ import { GuildConfigStorage } from "./guild-config-storage"
                 "as",
                 finalReportUrl
             )
-            const msgText = message.createMessage(
+            const options: Collection<string, MessageCreateOptions> =
+                new Collection<string, MessageCreateOptions>()
+            options.set(
                 "text",
-                data,
-                fleetData,
-                finalReportUrl,
-                "__**X-Wars Original News Agency:**__"
+                message.createMessage(
+                    "text",
+                    data,
+                    fleetData,
+                    finalReportUrl,
+                    "__**X-Wars Original News Agency:**__"
+                )
+            )
+            options.set(
+                "oneline",
+                message.createMessage(
+                    "oneline",
+                    data,
+                    fleetData,
+                    finalReportUrl,
+                    "__**X-Wars Original News Agency:**__"
+                )
+            )
+            options.set(
+                "bargraph",
+                message.createMessage(
+                    "bargraph",
+                    data,
+                    fleetData,
+                    finalReportUrl,
+                    "__**X-Wars Original News Agency:**__"
+                )
             )
 
-            const msgOneLine = message.createMessage(
-                "oneline",
-                data,
-                fleetData,
-                finalReportUrl,
-                "__**X-Wars Original News Agency:**__"
-            )
-            const msgBarGraph = message.createMessage(
-                "bargraph",
-                data,
-                fleetData,
-                finalReportUrl,
-                "__**X-Wars Original News Agency:**__"
-            )
             client.guilds.cache.each(async (guild) => {
-                let text, embed, file
-                switch (
+                const format =
                     (await config.getValue(guild.id, "default_format_bot")) ||
                     "text"
-                ) {
-                    case "oneline":
-                        text = msgOneLine.text
-                        embed = msgOneLine.embed
-                        file = msgOneLine.file
-                        break
-                    case "bargraph":
-                        text = msgBarGraph.text
-                        embed = msgBarGraph.embed
-                        file = msgBarGraph.file
-                        break
-                    case "text":
-                    default:
-                        text = msgText.text
-                        embed = msgText.embed
-                        file = msgText.file
-                        break
-                }
+                const msgOption = options.get(format)
+                if (msgOption == undefined) throw new Error("format not found")
                 const cache = guild.channels.cache
                 if (cache == undefined) {
                     throw Error("no channels found")
@@ -184,11 +181,7 @@ import { GuildConfigStorage } from "./guild-config-storage"
                     throw new Error("battle reports channel not found")
                 }
                 if (channel instanceof TextChannel) {
-                    await channel.send({
-                        content: text,
-                        embeds: embed ? [embed] : undefined,
-                        files: file ? [file] : undefined,
-                    })
+                    await channel.send(msgOption)
                 }
             })
         } catch (e) {

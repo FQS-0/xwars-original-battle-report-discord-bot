@@ -6,7 +6,12 @@
  *  - CreateOneLineMEssage: short report that fits into one line
  */
 
-import { AttachmentBuilder, EmbedBuilder, User } from "discord.js"
+import {
+    AttachmentBuilder,
+    EmbedBuilder,
+    MessageCreateOptions,
+    User,
+} from "discord.js"
 import { Data } from "./model/report/Data"
 import { MpType, PartyEnum } from "./model/report/Enums"
 import { Fleet } from "./model/report/Fleet"
@@ -47,7 +52,7 @@ const createTextMessage = (
     fleetData: Fleet[],
     finalReportUrl: string,
     user: string | User
-) => {
+): MessageCreateOptions => {
     const attackerMP = data
         .getMp(MpType.fighting, PartyEnum.attacker)
         .toFixed(1)
@@ -131,7 +136,7 @@ const createTextMessage = (
         ? "[" + data.parties.defender.planet.alliance + "] "
         : ""
     return {
-        text: `${user} shared a battle report: ${finalReportUrl}
+        content: `${user} shared a battle report: ${finalReportUrl}
 
 **Attacker:** ${attackerAlliance}${
             data.parties.attacker.planet.user_alias
@@ -154,8 +159,6 @@ const createTextMessage = (
         ${fleetLostResponse}
         ${resultResponse}
         ${"-".repeat(100)}`,
-        embed: undefined,
-        file: undefined,
     }
 }
 
@@ -166,7 +169,10 @@ const createTextMessage = (
  * @param finalReportUrl - Url of the anonymised battel report
  * @returns the message in embed format
  */
-const createOneLineMessage = (data: Data, finalReportUrl: string) => {
+const createOneLineMessage = (
+    data: Data,
+    finalReportUrl: string
+): MessageCreateOptions => {
     let attacker = data.parties.attacker.planet.user_alias
     let defender = data.parties.defender.planet.user_alias
     let loot = ""
@@ -193,17 +199,27 @@ const createOneLineMessage = (data: Data, finalReportUrl: string) => {
     }
 
     const attLostMp = data.getMp(MpType.destroyed, PartyEnum.attacker)
-    const attLost = data.getMp(MpType.destroyed, PartyEnum.attacker) / data.getMp(MpType.fighting, PartyEnum.attacker)
-    if (attLostMp > 0) attacker = `${attacker} (-${formatNumber(attLostMp)} MP, ${Math.round(attLost*100)}%)`
+    const attLost =
+        data.getMp(MpType.destroyed, PartyEnum.attacker) /
+        data.getMp(MpType.fighting, PartyEnum.attacker)
+    if (attLostMp > 0)
+        attacker = `${attacker} (-${formatNumber(attLostMp)} MP, ${Math.round(
+            attLost * 100
+        )}%)`
     const defLostMp = data.getMp(MpType.destroyed, PartyEnum.defender)
-    const defLost = data.getMp(MpType.destroyed, PartyEnum.defender) / data.getMp(MpType.fighting, PartyEnum.defender)
-    if (defLostMp > 0) defender = `${defender} (-${formatNumber(defLostMp)} MP, ${Math.round(defLost*100)}%)`
+    const defLost =
+        data.getMp(MpType.destroyed, PartyEnum.defender) /
+        data.getMp(MpType.fighting, PartyEnum.defender)
+    if (defLostMp > 0)
+        defender = `${defender} (-${formatNumber(defLostMp)} MP, ${Math.round(
+            defLost * 100
+        )}%)`
 
     const embed = new EmbedBuilder().setDescription(
         `[Battle Report](${finalReportUrl}): ${attacker} vs ${defender}${loot}`
     )
 
-    return { text: undefined, embed: embed, file: undefined }
+    return { embeds: [embed] }
 }
 
 /**
@@ -217,7 +233,7 @@ const createBarGraphMessage = (
     data: Data,
     finalReportUrl: string,
     user: string | User
-) => {
+): MessageCreateOptions => {
     const embed = new EmbedBuilder()
         .setTitle("Battle report")
         .setURL(finalReportUrl)
@@ -366,7 +382,7 @@ const createBarGraphMessage = (
 
     embed.setImage("attachment://kb.png")
 
-    return { text: undefined, embed: embed, file: file }
+    return { embeds: [embed], files: [file] }
 }
 
 /**
@@ -385,7 +401,7 @@ export const createMessage = (
     fleetData: Fleet[],
     finalReportUrl: string,
     user: string | User
-) => {
+): MessageCreateOptions => {
     switch (format) {
         case "text":
             return createTextMessage(data, fleetData, finalReportUrl, user)

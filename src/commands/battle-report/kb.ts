@@ -90,7 +90,7 @@ const command = async (
         )
         const finalReportUrl = [REPORT_URL_BASE, reportId].join("")
 
-        const { text, embed, file } = message.createMessage(
+        const msgOptions = message.createMessage(
             format,
             data,
             fleetData,
@@ -108,9 +108,9 @@ const command = async (
         )
         if (DEBUG || pmOnly) {
             interaction.reply({
-                content: text,
-                embeds: embed ? [embed] : undefined,
-                files: file ? [file] : undefined,
+                content: msgOptions.content,
+                embeds: msgOptions.embeds,
+                files: msgOptions.files,
                 ephemeral: true,
             })
             return
@@ -127,11 +127,7 @@ const command = async (
             throw new Error("batte reports channel not found")
         }
         if (channel instanceof TextChannel) {
-            await channel.send({
-                content: text,
-                embeds: embed ? [embed] : undefined,
-                files: file ? [file] : undefined,
-            })
+            await channel.send(msgOptions)
         }
         await interaction.reply({
             content: `Battle report shared as ${finalReportUrl} in channel ${channel.toString()}`,
