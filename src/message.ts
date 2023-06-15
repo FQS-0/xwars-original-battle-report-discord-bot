@@ -180,20 +180,24 @@ const createOneLineMessage = (data: Data, finalReportUrl: string) => {
     if (data.loot.info.atter_couldloot) {
         attacker = `**${attacker}**`
         const values = data.loot.values
-        if (values) {
-            loot = values
-                .values()
-                .map((v) => formatNumber(v))
-                .join(" | ")
+        if (values && values.values().some((v) => v > 0)) {
+            loot =
+                " - " +
+                values
+                    .values()
+                    .map((v) => formatNumber(v))
+                    .join(" | ")
         }
     } else {
         defender = `**${defender}**`
     }
 
     const attLostMp = data.getMp(MpType.destroyed, PartyEnum.attacker)
-    if (attLostMp > 0) attacker = `${attacker} (-${formatNumber(attLostMp)} MP)`
+    const attLost = data.getMp(MpType.destroyed, PartyEnum.attacker) / data.getMp(MpType.fighting, PartyEnum.attacker)
+    if (attLostMp > 0) attacker = `${attacker} (-${formatNumber(attLostMp)} MP, ${Math.round(attLost*100)}%)`
     const defLostMp = data.getMp(MpType.destroyed, PartyEnum.defender)
-    if (defLostMp > 0) defender = `${defender} (-${formatNumber(defLostMp)} MP)`
+    const defLost = data.getMp(MpType.destroyed, PartyEnum.defender) / data.getMp(MpType.fighting, PartyEnum.defender)
+    if (defLostMp > 0) defender = `${defender} (-${formatNumber(defLostMp)} MP, ${Math.round(defLost*100)}%)`
 
     const embed = new EmbedBuilder().setDescription(
         `[Battle Report](${finalReportUrl}): ${attacker} vs ${defender}${loot}`
