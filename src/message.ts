@@ -6,10 +6,11 @@
  *  - CreateOneLineMEssage: short report that fits into one line
  */
 
-import { EmbedBuilder } from "discord.js"
+import { AttachmentBuilder, EmbedBuilder, User } from "discord.js"
 import { Data } from "./model/report/Data"
 import { MpType, PartyEnum } from "./model/report/Enums"
 import { Fleet } from "./model/report/Fleet"
+import { createBarGraphImage } from "./lib/BarGraph"
 
 /**
  * Formats a number to reduce characters needed to display it. Uses prefixes k and M. Rounds number to one or no decimal places.
@@ -45,7 +46,7 @@ const createTextMessage = (
     data: Data,
     fleetData: Fleet[],
     finalReportUrl: string,
-    user: string
+    user: string | User
 ) => {
     const attackerMP = data
         .getMp(MpType.fighting, PartyEnum.attacker)
@@ -154,6 +155,7 @@ const createTextMessage = (
         ${resultResponse}
         ${"-".repeat(100)}`,
         embed: undefined,
+        file: undefined,
     }
 }
 
@@ -197,7 +199,171 @@ const createOneLineMessage = (data: Data, finalReportUrl: string) => {
         `[Battle Report](${finalReportUrl}): ${attacker} vs ${defender}${loot}`
     )
 
-    return { text: undefined, embed: embed }
+    return { text: undefined, embed: embed, file: undefined }
+}
+
+/**
+ * Creates a embed message with attached bar graph image
+ *
+ * @param data - data from the battle report
+ * @param finalReportUrl - Url of the anonymised battel report
+ * @returns the message in embed format
+ */
+const createBarGraphMessage = (
+    data: Data,
+    finalReportUrl: string,
+    user: string | User
+) => {
+    const embed = new EmbedBuilder()
+        .setTitle("Battle report")
+        .setURL(finalReportUrl)
+        .setTimestamp(data.time * 1000)
+        .setDescription("desc")
+
+    if (typeof user == "string") {
+        embed.setAuthor({ name: user })
+    } else {
+        embed.setAuthor({
+            name: user.username,
+            iconURL: user.avatarURL() || undefined,
+        })
+    }
+
+    if (data.parties.attacker.planet.alliance != "")
+        embed.addFields({
+            name: "Attacker",
+            value: `[${data.parties.attacker.planet.alliance}] ${data.parties.attacker.planet.user_alias}`,
+            inline: true,
+        })
+    else
+        embed.addFields({
+            name: "Attacker",
+            value: data.parties.attacker.planet.user_alias,
+            inline: true,
+        })
+
+    {
+        const count = data.ships.fightingShips.getCount(PartyEnum.attacker)
+        const attack = data.ships.fightingShips.getAttack(PartyEnum.attacker)
+        const defense = data.ships.fightingShips.getDefense(PartyEnum.attacker)
+        const mp = data.ships.fightingShips.getMp(PartyEnum.attacker)
+
+        embed.addFields({
+            name: "Fleet",
+            value: `${count} ships - ${formatNumber(mp)} MP\n${formatNumber(
+                attack
+            )} Att/ ${formatNumber(defense)} Def`,
+            inline: true,
+        })
+    }
+    {
+        const count =
+            data.ships.fightingShips.getCount(PartyEnum.attacker) -
+            data.ships.survivingShips.getCount(PartyEnum.attacker)
+        const attack =
+            data.ships.fightingShips.getAttack(PartyEnum.attacker) -
+            data.ships.survivingShips.getAttack(PartyEnum.attacker)
+        const defense =
+            data.ships.fightingShips.getDefense(PartyEnum.attacker) -
+            data.ships.survivingShips.getDefense(PartyEnum.attacker)
+        const mp =
+            data.ships.fightingShips.getMp(PartyEnum.attacker) -
+            data.ships.survivingShips.getMp(PartyEnum.attacker)
+        const losses =
+            1 -
+            data.ships.survivingShips.getMp(PartyEnum.attacker) /
+                data.ships.fightingShips.getMp(PartyEnum.attacker)
+
+        if (mp > 0)
+            embed.addFields({
+                name: `Losses ${Math.round(losses * 100)} %`,
+                value: `${count} ships - ${formatNumber(mp)} MP\n${formatNumber(
+                    attack
+                )} Att/ ${formatNumber(defense)} Def`,
+                inline: true,
+            })
+    }
+
+    embed.addFields({ name: "\u200B", value: "\u200B" })
+
+    if (data.parties.defender.planet.alliance != "")
+        embed.addFields({
+            name: "Defender",
+            value: `[${data.parties.defender.planet.alliance}] ${data.parties.defender.planet.user_alias}`,
+            inline: true,
+        })
+    else
+        embed.addFields({
+            name: "Defender",
+            value: data.parties.defender.planet.user_alias,
+            inline: true,
+        })
+
+    {
+        const count = data.ships.fightingShips.getCount(PartyEnum.defender)
+        const attack = data.ships.fightingShips.getAttack(PartyEnum.defender)
+        const defense = data.ships.fightingShips.getDefense(PartyEnum.defender)
+        const mp = data.ships.fightingShips.getMp(PartyEnum.defender)
+
+        embed.addFields({
+            name: "Fleet",
+            value: `${count} ships - ${formatNumber(mp)} MP\n${formatNumber(
+                attack
+            )} Att/ ${formatNumber(defense)} Def`,
+            inline: true,
+        })
+    }
+    {
+        const count =
+            data.ships.fightingShips.getCount(PartyEnum.defender) -
+            data.ships.survivingShips.getCount(PartyEnum.defender)
+        const attack =
+            data.ships.fightingShips.getAttack(PartyEnum.defender) -
+            data.ships.survivingShips.getAttack(PartyEnum.defender)
+        const defense =
+            data.ships.fightingShips.getDefense(PartyEnum.defender) -
+            data.ships.survivingShips.getDefense(PartyEnum.defender)
+        const mp =
+            data.ships.fightingShips.getMp(PartyEnum.defender) -
+            data.ships.survivingShips.getMp(PartyEnum.defender)
+        const losses =
+            1 -
+            data.ships.survivingShips.getMp(PartyEnum.defender) /
+                data.ships.fightingShips.getMp(PartyEnum.defender)
+
+        if (mp > 0)
+            embed.addFields({
+                name: `Losses ${Math.round(losses * 100)} %`,
+                value: `${count} ships - ${formatNumber(mp)} MP\n${formatNumber(
+                    attack
+                )} Att/ ${formatNumber(defense)} Def`,
+                inline: true,
+            })
+    }
+
+    if (data.loot.info.atter_couldloot) {
+        embed.setDescription("Attacker wins!")
+        console.log(data.loot.values)
+        if (data.loot.values && data.loot.values.values().some((v) => v > 0)) {
+            console.log("Loot")
+            embed.addFields({
+                name: "Loot",
+                value: data.loot.values
+                    .values()
+                    .map((v) => formatNumber(v))
+                    .join(" | "),
+            })
+        }
+    } else {
+        embed.setDescription("Defender wins!")
+    }
+
+    const image = createBarGraphImage(data)
+    const file = new AttachmentBuilder(image, { name: "kb.png" })
+
+    embed.setImage("attachment://kb.png")
+
+    return { text: undefined, embed: embed, file: file }
 }
 
 /**
@@ -215,7 +381,7 @@ export const createMessage = (
     data: Data,
     fleetData: Fleet[],
     finalReportUrl: string,
-    user: string
+    user: string | User
 ) => {
     switch (format) {
         case "text":
@@ -223,6 +389,9 @@ export const createMessage = (
             break
         case "oneline":
             return createOneLineMessage(data, finalReportUrl)
+            break
+        case "bargraph":
+            return createBarGraphMessage(data, finalReportUrl, user)
             break
         default:
             throw new Error("unknown format")
