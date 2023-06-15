@@ -218,7 +218,6 @@ const createBarGraphMessage = (
         .setTitle("Battle report")
         .setURL(finalReportUrl)
         .setTimestamp(data.time * 1000)
-        .setDescription("desc")
 
     if (typeof user == "string") {
         embed.setAuthor({ name: user })
@@ -342,10 +341,8 @@ const createBarGraphMessage = (
     }
 
     if (data.loot.info.atter_couldloot) {
-        embed.setDescription("Attacker wins!")
-        console.log(data.loot.values)
         if (data.loot.values && data.loot.values.values().some((v) => v > 0)) {
-            console.log("Loot")
+            embed.setDescription("Attacker wins!")
             embed.addFields({
                 name: "Loot",
                 value: data.loot.values
@@ -353,6 +350,8 @@ const createBarGraphMessage = (
                     .map((v) => formatNumber(v))
                     .join(" | "),
             })
+        } else {
+            embed.setDescription("Attacker wins and loots nothing!")
         }
     } else {
         embed.setDescription("Defender wins!")
