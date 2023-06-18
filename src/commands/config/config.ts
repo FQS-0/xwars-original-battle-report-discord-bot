@@ -13,11 +13,10 @@ import { Command } from "../../command.js"
 import {
     ChatInputCommandInteraction,
     SlashCommandBuilder,
-    PermissionFlagsBits,
+    PermissionFlagsBits
 } from "discord.js"
 
-import { GuildConfigStorage } from "../../guild-config-storage.js"
-const config = new GuildConfigStorage()
+import { GuildConfig } from "../../guild-config.js"
 
 const builder = new SlashCommandBuilder()
 builder
@@ -83,15 +82,21 @@ const execute = async (interaction: ChatInputCommandInteraction) => {
         throw new Error("no guild")
     }
 
+    const config = await GuildConfig.forGuild(interaction.guild)
+
     switch (subcommand) {
         case "default_format":
             if (format) {
-                //Set format
-                config.setValue(
-                    interaction.guild.id,
-                    `default_format_${type}`,
-                    format
-                )
+                switch (type) {
+                    case "user":
+                        config.defaultFormatUser = format
+                        break
+                    case "bot":
+                        config.defaultFormatBot = format
+                        break
+                    default:
+                        throw new Error("unknown format")
+                }
 
                 interaction.reply({
                     content: `Default format for ${type} set to ${format}`,
@@ -99,11 +104,17 @@ const execute = async (interaction: ChatInputCommandInteraction) => {
                 })
             } else {
                 //Return format
-                const format =
-                    (await config.getValue(
-                        interaction.guild.id,
-                        `default_format_${type}`
-                    )) || "text"
+                let format
+                switch (type) {
+                    case "user":
+                        format = config.defaultFormatUser
+                        break
+                    case "bot":
+                        format = config.defaultFormatBot
+                        break
+                    default:
+                        throw new Error("unknown format")
+                }
 
                 interaction.reply({
                     content: `Default format for ${type} is ${format}`,

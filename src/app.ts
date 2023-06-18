@@ -24,11 +24,9 @@ import {
 import { CommandManager } from "./command.js"
 import * as parser from "./parser.js"
 import * as message from "./message.js"
-import { GuildConfigStorage } from "./guild-config-storage.js"
+import { GuildConfig } from "./guild-config.js"
 
 const app = express()
-
-const config = new GuildConfigStorage()
 
 // Create a new client instance
 const client = new Client({ intents: [GatewayIntentBits.Guilds] })
@@ -142,11 +140,9 @@ app.get("/report", async (req, res) => {
             "__**X-Wars Original News Agency:**__"
         )
         client.guilds.cache.each(async (guild) => {
+            const config = await GuildConfig.forGuild(guild)
             let text, embed
-            switch (
-                (await config.getValue(guild.id, "default_format_bot")) ||
-                "text"
-            ) {
+            switch (config.defaultFormatBot) {
                 case "oneline":
                     text = msgOneLine.text
                     embed = msgOneLine.embed

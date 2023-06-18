@@ -20,8 +20,7 @@ import { Command } from "../../command.js"
 import * as parser from "../../parser.js"
 import * as message from "../../message.js"
 
-import { GuildConfigStorage } from "../../guild-config-storage.js"
-const config = new GuildConfigStorage()
+import { GuildConfig } from "../../guild-config.js"
 
 import {
     ChatInputCommandInteraction,
@@ -78,10 +77,10 @@ const execute = async (
         throw new Error("no guild found")
     }
 
+    const config = await GuildConfig.forGuild(guild)
     const format =
         interaction.options.get("format")?.value?.toString() ||
-        (await config.getValue(guild.id, "default_format_user")) ||
-        "text"
+        config.defaultFormatUser
 
     try {
         const { reportId, data, fleetData } = parser.parseReport(
@@ -148,4 +147,3 @@ const execute = async (
 }
 
 export const command = new Command(builder, execute)
-

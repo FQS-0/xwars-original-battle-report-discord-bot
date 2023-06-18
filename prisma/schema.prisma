@@ -1,0 +1,17 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("GUILD_CONFIG_DATABASE")
+}
+
+model GuildConfig {
+  id String @id
+  default_format_user String 
+  default_format_bot String
+  report_channel_id String?
+  publish_push_reports Boolean
+  @@index([id])
+}
