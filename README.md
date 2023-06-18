@@ -26,7 +26,15 @@ The bot is written for NodeJS v18+ and has several files in the `src` directory:
   - `command.ts`: manages loading and execution of commands from the `commands/` folder
   - `parser.ts`: retrieves the battle report, extracts data from the report and saves it anonymized to disk 
   - `message.ts`: creates different message formats
-  - `guild-config-storage.ts`: sqlite3 storage for guild configuration
+  - `guild-config.ts`: database wrapper for guild configuration
   - `validator.ts`: provides validators for json data from reports
   - `model/report`: models used by the json-object-mapper to map the JSON data from reports
 
+### .env variables
+ - `DISCORD_BOT_TOKEN`: bot token from discord developer portal
+ - `DISCORD_BOT_CLIENT_ID`: application id from discord developer portal
+ - `GUILD_CONFIG_DATABASE`: path to sqlite database relative to `prisma/` - format `file:./path/to/db/`
+ - `DEBUG`: reports will be sent as private message - default `false`
+ - `HTTP_PORT`: port for http api - default `3000`
+ - `REPORT_URL_BASE`: base url for parsed reports - default `https://kb.original.xwars.net/`
+ - `REPORT_TOKEN`: bearer token to push reports through `report/` - default `no-token-defined`

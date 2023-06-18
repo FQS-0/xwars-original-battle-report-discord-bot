@@ -3,8 +3,6 @@
  * @module
  */
 
-import "dotenv/config"
-
 import { PrismaClient, GuildConfig as GuildConfigPrisma } from "@prisma/client"
 
 import { Guild, Snowflake } from "discord.js"

@@ -7,9 +7,15 @@ const HTTP_PORT = parseInt(process.env.HTTP_PORT || "3000")
 const REPORT_URL_BASE =
     process.env.REPORT_URL_BASE || "https://kb.original.xwars.net/"
 const REPORT_TOKEN = process.env.REPORT_TOKEN || "no-token-defined"
+const GUILD_CONFIG_DATABASE = process.env.GUILD_CONFIG_DATABASE
 
 if (!DISCORD_BOT_TOKEN)
     throw new Error("missing required environment variable DISCORD_BOT_TOKEN")
+
+if (!GUILD_CONFIG_DATABASE)
+    throw new Error(
+        "missing required environment variable GUILD_CONFIG_DATABASE"
+    )
 
 import express from "express"
 import {
