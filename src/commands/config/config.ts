@@ -13,7 +13,10 @@ import { Command } from "../../command.js"
 import {
     ChatInputCommandInteraction,
     SlashCommandBuilder,
-    PermissionFlagsBits
+    PermissionFlagsBits,
+    DiscordAPIError,
+    DiscordjsError,
+    DiscordjsErrorCodes,
 } from "discord.js"
 
 import { GuildConfig } from "../../guild-config.js"
@@ -77,56 +80,118 @@ const execute = async (interaction: ChatInputCommandInteraction) => {
     const subcommand = interaction.options.getSubcommand()
     const type = interaction.options.get("type")?.value?.toString()
     const format = interaction.options.get("format")?.value?.toString()
+    const id = interaction.options.get("id")?.value?.toString()
+    const value = interaction.options.get("value")?.value
 
     if (!interaction.guild) {
         throw new Error("no guild")
     }
 
     const config = await GuildConfig.forGuild(interaction.guild)
+    try {
+        switch (subcommand) {
+            case "default_format":
+                if (format) {
+                    switch (type) {
+                        case "user":
+                            config.defaultFormatUser = format
+                            break
+                        case "bot":
+                            config.defaultFormatBot = format
+                            break
+                        default:
+                            throw new Error("unknown format")
+                    }
 
-    switch (subcommand) {
-        case "default_format":
-            if (format) {
-                switch (type) {
-                    case "user":
-                        config.defaultFormatUser = format
-                        break
-                    case "bot":
-                        config.defaultFormatBot = format
-                        break
-                    default:
-                        throw new Error("unknown format")
+                    interaction.reply({
+                        content: `Default format for ${type} set to ${format}`,
+                        ephemeral: true,
+                    })
+                } else {
+                    //Return format
+                    let format
+                    switch (type) {
+                        case "user":
+                            format = config.defaultFormatUser
+                            break
+                        case "bot":
+                            format = config.defaultFormatBot
+                            break
+                        default:
+                            throw new Error("unknown format")
+                    }
+
+                    interaction.reply({
+                        content: `Default format for ${type} is ${format}`,
+                        ephemeral: true,
+                    })
                 }
-
+                break
+            case "publish_push_reports":
+                if (value !== undefined) {
+                    if (typeof value !== "boolean")
+                        throw new Error("expected boolean value")
+                    config.publishPushReports = value
+                    interaction.reply({
+                        content: `publish_push_records set to ${value}`,
+                        ephemeral: true,
+                    })
+                } else {
+                    interaction.reply({
+                        content: `publish_push_records is ${config.publishPushReports}`,
+                        ephemeral: true,
+                    })
+                }
+                break
+            case "report_channel":
+                if (id !== undefined) {
+                    const channel = await interaction.guild.channels.fetch(id)
+                    if (channel !== null) {
+                        config.reportChannel = id
+                        interaction.reply({
+                            content: `report_channel set to ${id} = ${channel}`,
+                            ephemeral: true,
+                        })
+                    }
+                } else {
+                    const id = config.reportChannel
+                    if (id !== null) {
+                        const channel = await interaction.guild.channels.fetch(
+                            id
+                        )
+                        if (channel !== null) {
+                            interaction.reply({
+                                content: `report_channel is ${id} = ${channel}`,
+                                ephemeral: true,
+                            })
+                        }
+                    } else {
+                        interaction.reply({
+                            content: `report_channel is not configured`,
+                            ephemeral: true,
+                        })
+                    }
+                }
+                break
+            default:
                 interaction.reply({
-                    content: `Default format for ${type} set to ${format}`,
+                    content: `Unknown subcommand ${subcommand}`,
                     ephemeral: true,
                 })
-            } else {
-                //Return format
-                let format
-                switch (type) {
-                    case "user":
-                        format = config.defaultFormatUser
-                        break
-                    case "bot":
-                        format = config.defaultFormatBot
-                        break
-                    default:
-                        throw new Error("unknown format")
-                }
-
-                interaction.reply({
-                    content: `Default format for ${type} is ${format}`,
-                    ephemeral: true,
-                })
-            }
-            break
-        default:
+        }
+    } catch (e) {
+        if (
+            e instanceof DiscordAPIError ||
+            (e instanceof DiscordjsError &&
+                e.code == DiscordjsErrorCodes.GuildChannelUnowned)
+        ) {
             interaction.reply({
-                content: `Unknown subcommand ${subcommand}`,
+                content: `Error: no channel with this id exists on the guild.`,
                 ephemeral: true,
             })
+            return
+        }
+        throw e
     }
 }
 

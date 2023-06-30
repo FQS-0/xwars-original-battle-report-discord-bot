@@ -24,6 +24,7 @@ import { GuildConfig } from "../../guild-config.js"
 
 import {
     ChatInputCommandInteraction,
+    DiscordAPIError,
     SlashCommandBuilder,
     TextChannel,
 } from "discord.js"
@@ -113,28 +114,37 @@ const execute = async (
             return
         }
 
-        const cache = guild.channels.cache
-        if (cache == undefined) {
-            throw Error("no channels found")
+        const channelId = config.reportChannel
+        if (channelId === null) {
+            interaction.reply({
+                content: "Error: report_channel not configured",
+                ephemeral: true,
+            })
+            return
         }
-        const channel = cache.find((channel) =>
-            channel.name.match(/battle-reports/)
-        )
-        if (channel == undefined) {
-            throw new Error("batte reports channel not found")
-        }
+
+        const channel = await guild.channels.fetch(channelId)
+        if (channel === null) throw new Error("unexpected null")
+
         if (channel instanceof TextChannel) {
             await channel.send({
                 content: text,
                 embeds: embed ? [embed] : undefined,
             })
         }
+
         await interaction.reply({
             content: `Battle report shared as ${finalReportUrl} in channel ${channel.toString()}`,
             ephemeral: true,
         })
     } catch (e) {
-        if (e instanceof parser.ParseError) {
+        if (e instanceof DiscordAPIError) {
+            interaction.reply({
+                content: `Error: report_channel not found on this guild`,
+                ephemeral: true,
+            })
+            return
+        } else if (e instanceof parser.ParseError) {
             interaction.reply({
                 content: e.message,
                 ephemeral: true,

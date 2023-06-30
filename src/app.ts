@@ -147,6 +147,9 @@ app.get("/report", async (req, res) => {
         )
         client.guilds.cache.each(async (guild) => {
             const config = await GuildConfig.forGuild(guild)
+
+            if (!config.publishPushReports) return
+
             let text, embed
             switch (config.defaultFormatBot) {
                 case "oneline":
@@ -159,16 +162,14 @@ app.get("/report", async (req, res) => {
                     embed = msgText.embed
                     break
             }
-            const cache = guild.channels.cache
-            if (cache == undefined) {
-                throw Error("no channels found")
+            const channelId = config.reportChannel
+            if (channelId === null) {
+                console.log(`No report_channel configured for guild ${guild}`)
+                return
             }
-            const channel = cache.find((channel) =>
-                channel.name.match(/battle-reports/)
-            )
-            if (channel == undefined) {
-                throw new Error("batte reports channel not found")
-            }
+            const channel = await guild.channels.fetch(channelId)
+            if (channel === null) throw new Error("unexpected null")
+
             if (channel instanceof TextChannel) {
                 await channel.send({
                     content: text,
