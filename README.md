@@ -4,11 +4,13 @@ This is a Discord bot that parses the original battle reports from the game [X-W
 
 ## Usage
 
-You can add this bot to your own Discord server with the following [Link](https://discord.com/api/oauth2/authorize?client_id=1113485760604147784&permissions=&scope=bot). It will post processed battle report into a channel which name contains `battle-reports`. Additionally to reports parsed by users the bot will automatically post notable battle reports.
+You can add this bot to your own Discord server with the following [Link](https://discord.com/api/oauth2/authorize?client_id=1113485760604147784&permissions=&scope=bot). It will post processed battle report into a configurable channel. This channel must be set in order for the bot to work. Additionally to reports parsed by users the bot will automatically post notable battle reports.
 
 ### Commands
   - `/kb <url> <private> <format>`: Reads the report from the URL and replys with the parsed report. The bot will post the report publically unless private=true ist added. Optionally you can specify the message format.
   - `/config default_format <user|bot> <format>`: Gets or sets the default message format for either reports parsed by a user or automaticalle by the bot. You need the privilege to manage channels to use this command.
+  - `/config report_channel <id>`: Gets or sets the channel in which the bot will publish processed reports.
+  - `/config publish_push_reports <true|false>`: Gets or sets whether the bot should publish reports pushed through the HTTP API.
   
 ### Message Formats
   - `text`: detailed text report
