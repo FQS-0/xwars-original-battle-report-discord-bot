@@ -9,7 +9,7 @@
         "lint": "eslint src",
         "format": "prettier --write 'src/**/*.ts'",
         "build": "tsc",
-        "bot": "node dist/deploy-commands.js && node dist/app.js",
+        "bot": "npx prisma db push && node dist/deploy-commands.js && node dist/app.js",
         "deploy-commands": "node dist/deploy-commands.js",
         "dev": "DEBUG=true nodemon app.js",
         "testjson": "tsc && node dist/validator_test.js"
