@@ -25,6 +25,7 @@ import { GuildConfig } from "../../guild-config.js"
 import {
     ChatInputCommandInteraction,
     DiscordAPIError,
+    RESTJSONErrorCodes,
     SlashCommandBuilder,
     TextChannel,
 } from "discord.js"
@@ -138,7 +139,10 @@ const execute = async (
             ephemeral: true,
         })
     } catch (e) {
-        if (e instanceof DiscordAPIError) {
+        if (
+            e instanceof DiscordAPIError &&
+            e.code === RESTJSONErrorCodes.UnknownChannel
+        ) {
             interaction.reply({
                 content: `Error: report_channel not found on this guild`,
                 ephemeral: true,

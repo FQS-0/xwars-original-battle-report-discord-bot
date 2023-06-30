@@ -17,6 +17,7 @@ import {
     DiscordAPIError,
     DiscordjsError,
     DiscordjsErrorCodes,
+    RESTJSONErrorCodes,
 } from "discord.js"
 
 import { GuildConfig } from "../../guild-config.js"
@@ -181,9 +182,10 @@ const execute = async (interaction: ChatInputCommandInteraction) => {
         }
     } catch (e) {
         if (
-            e instanceof DiscordAPIError ||
+            (e instanceof DiscordAPIError &&
+                e.code === RESTJSONErrorCodes.UnknownChannel) ||
             (e instanceof DiscordjsError &&
-                e.code == DiscordjsErrorCodes.GuildChannelUnowned)
+                e.code === DiscordjsErrorCodes.GuildChannelUnowned)
         ) {
             interaction.reply({
                 content: `Error: no channel with this id exists on the guild.`,
